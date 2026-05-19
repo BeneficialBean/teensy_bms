@@ -31,7 +31,7 @@ LOG_MODULE_REGISTER(can_tx, LOG_LEVEL_INF);
 #define CAN_TX_INTERVAL_MS 100       /* Transmit one frame every 100 ms  */
 
 /* ── Device alias defined in the board overlay (see below) ────── */
-#define CAN_DEVICE_NODE    DT_ALIAS(can_primary)
+#define CAN_DEVICE_NODE    DT_CHOSEN(zephyr_canbus)
 
 /* ── Payload layout (8 bytes) ─────────────────────────────────── *
  *  Byte 0   : rolling counter  (0x00 – 0xFF, wraps)               *
