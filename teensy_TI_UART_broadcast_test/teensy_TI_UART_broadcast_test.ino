@@ -3,6 +3,8 @@
 // software design ref (SDR): https://www.ti.com/lit/an/slvae86b/slvae86b.pdf?ts=1775108056517
 // datasheet: https://www.ti.com/lit/gpn/bq79616-q1
 
+//hi evan
+
 /*---- command frame ----
 {
 initialization,
