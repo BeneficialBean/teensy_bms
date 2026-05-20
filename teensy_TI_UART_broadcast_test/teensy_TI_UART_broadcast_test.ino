@@ -151,6 +151,44 @@ void wakePing() {
   digitalWrite(TX_PIN, HIGH);
 }
 
+//===================================
+// coner's work
+//===================================
+//placeholders
+void readVoltages(){
+  //TODO: do it.  
+}
+
+void rebalanceVoltages(){
+  //TODO: well figure out how to write first
+}
+
+//want to test writing commands with a simple output
+//should print to serial monitor when teensy plugged into computer
+void testTeensyWrite(){
+  //command byte, device address, high/low byte, and crc bytes 1 and 2
+  /*
+  CRC is different for every command
+  */
+  uint8_t txBuffer[7] = {0x80, 0x00, 0x03, 0x00, 0x12, 0x34}
+
+  Serial.print("Sent: ");
+  for(int i=0; i<txLength; i++) {
+    if (txBuffer[i] < 0x10){Serial.print("0");} // Add leading zero
+    Serial.print(txBuffer[i], HEX);
+    Serial.print(" ");
+  }
+  Serial.println();
+}
+
+void testBQWrite(){
+  
+}
+
+//=====================================
+// setup & loop
+//=====================================
+
 void setup() {
   Serial.begin(1000000);  // Initialize the Serial monitor for debugging
   UART_SERIAL.begin(1000000);
