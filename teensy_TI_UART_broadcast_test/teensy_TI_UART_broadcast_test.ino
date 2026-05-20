@@ -8,11 +8,13 @@
 
 /*---- command frame ----
 {
-initialization,
+command type + (num bytes sent - 1), 
 device id (only for single device read/write),
 register addr 1,
 register addr 2,
-data (reading = num bytes requested [max 128], writing = bytes to be written [max 8]),
+data
+  reading - 1 byte, num bytes requested up to 128 (0x00 = 1 byte, 0x7F = 128 bytes), 
+  writing - data to be written [max 8 bytes],
 CRC 1,
 CRC 2,
 }*/
@@ -73,28 +75,28 @@ uint16_t crc_compute(const uint8_t *data, size_t length) {
 
 // Message Type Definitions
 // Single
-#define SINGLE_READ_VAL   0x80  
-#define SINGLE_WRITE_VAL  0x90  
+#define SINGLE_READ_VAL     0x80  
+#define SINGLE_WRITE_VAL    0x90  
 // Stack
-#define STACK_READ_VAL    0xA0
-#define STACK_WRITE_VAL   0xB0
+#define STACK_READ_VAL      0xA0
+#define STACK_WRITE_VAL     0xB0
 // Broadcast
-#define BROAD_READ_VAL    0xC0
-#define BROAD_WRITE_VAL   0xD0
+#define BROAD_READ_VAL      0xC0
+#define BROAD_WRITE_VAL     0xD0
 #define BROAD_WRITE_REVERSE 0xE0
 
 // Build a complete write frame into buf[], return total frame length
 // dev_addr: device address
 // msgType:  frame type
 // reg_addr: register address (2 bytes for BQ79616)
-// data:   payload bytes
+// data:     payload bytes
 // data_len: number of payload bytes (0–8)
 uint8_t build_write_frame(uint8_t *buf, uint8_t msgType, uint8_t dev_addr, uint16_t reg_addr, const uint8_t *data, uint8_t data_len) {
   uint8_t i = 0;
   
   // Header
-  buf[i++] = msgType;  // frame type
-  if (type == SINGLE_WRITE_VAL) { buf[i++] = dev_addr; }  // device address
+  buf[i++] = msgType + data_len ;  // frame type
+  if (msgType == SINGLE_WRITE_VAL) { buf[i++] = dev_addr; }  // device address
   
   buf[i++] = (uint8_t)(reg_addr >> 8);  // register address high byte
   buf[i++] = (uint8_t)(reg_addr & 0xFF); // register address low byte
@@ -103,6 +105,32 @@ uint8_t build_write_frame(uint8_t *buf, uint8_t msgType, uint8_t dev_addr, uint1
   for (uint8_t j = 0; j < data_len; j++) {
     buf[i++] = data[j];
   }
+
+  // CRC covers everything above
+  uint16_t crc = crc_compute(buf, i);
+  buf[i++] = (uint8_t)(crc & 0xFF);  // CRC low byte first
+  buf[i++] = (uint8_t)((crc >> 8) & 0xFF); // CRC high byte
+
+  return i; // total frame length
+}
+
+// Build a complete read frame into buf[], return total frame length
+// dev_addr: device address
+// msgType:  frame type
+// reg_addr: register address (2 bytes for BQ79616)
+// data:   payload bytes
+// data_len: number of payload bytes (0–8)
+uint8_t build_read_frame(uint8_t *buf, uint8_t msgType, uint8_t dev_addr, uint16_t reg_addr, uint8_t bytes_request) {
+  uint8_t i = 0;
+  
+  // Header
+  buf[i++] = msgType;  // frame type
+  if (msgType == SINGLE_READ_VAL) { buf[i++] = dev_addr; }  // device address
+  
+  buf[i++] = (uint8_t)(reg_addr >> 8);  // register address high byte
+  buf[i++] = (uint8_t)(reg_addr & 0xFF); // register address low byte
+
+  buf[i++] = bytes_request
 
   // CRC covers everything above
   uint16_t crc = crc_compute(buf, i);
